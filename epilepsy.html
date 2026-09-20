@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epilepsy — NeuroBureau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  This page assumes it sits at the repo root alongside emg-workbook.html,
+  eeg-workbook.html, index.html, style.css, script.js, and nav-data.js.
+  Real stylesheet/script includes left commented out below — verify class
+  names against the real header markup before enabling.
+-->
+<!-- <link rel="stylesheet" href="style.css"> -->
+<!-- <script src="nav-data.js" defer></script> -->
+<!-- <script src="script.js" defer></script> -->
+<style>
+  :root{
+    --bg:#0f1216;
+    --bg-panel:#161b21;
+    --bg-card:#1b2129;
+    --bg-card-hover:#1f2630;
+    --border:#2a323d;
+    --border-light:#333d4a;
+    --text:#e7ebf0;
+    --text-dim:#a6b0bd;
+    --text-faint:#6b7684;
+    --accent:#4fd1c5;
+    --accent-soft:rgba(79,209,197,0.12);
+    --accent-strong:#2fb8ab;
+    --pearl:#e3b341;
+    --pearl-bg:rgba(227,179,65,0.09);
+    --danger:#e8747c;
+    --danger-bg:rgba(232,116,124,0.11);
+    --danger-strong:#c94a53;
+    --warn2:#e3a341;
+    --warn2-bg:rgba(227,163,65,0.11);
+    --ok:#6fcf7a;
+    --ok-bg:rgba(111,207,122,0.10);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55;}
+  a{color:var(--accent);}
+  h1,h2,h3,h4{font-family:var(--sans);}
+
+  /* ---- site chrome ---- */
+  .site-topbar{display:flex; align-items:center; gap:14px; padding:14px 32px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+  .site-hamburger{background:none; border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-size:16px; padding:5px 10px; cursor:pointer;}
+  .site-wordmark{font-family:var(--mono); letter-spacing:0.08em; font-size:14px; color:var(--text); text-decoration:none;}
+  .site-breadcrumb{padding:10px 32px 0; margin:0; font-size:13px;}
+  .site-breadcrumb a{color:var(--text-faint); text-decoration:none;}
+  .site-breadcrumb a:hover{color:var(--accent);}
+
+  .wb-shell{display:grid; grid-template-columns:270px 1fr; max-width:1440px; margin:0 auto; align-items:start;}
+  .wb-header{grid-column:1/-1; padding:24px 32px 8px;}
+  .wb-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin:0 0 6px;}
+  .wb-title{font-size:32px; font-weight:700; margin:0 0 8px; letter-spacing:-0.01em;}
+  .wb-subtitle{color:var(--text-dim); font-size:15px; max-width:760px; margin:0;}
+
+  .wb-toc{position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto; padding:20px 14px 40px 32px; border-right:1px solid var(--border);}
+  .wb-toc-label{font-family:var(--mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin:16px 0 10px;}
+  .wb-toc ol{list-style:none; margin:0; padding:0; counter-reset:chapter;}
+  .wb-toc li{counter-increment:chapter; margin-bottom:2px;}
+  .wb-toc a{display:flex; gap:10px; align-items:baseline; padding:6px 10px; border-radius:6px; color:var(--text-dim); text-decoration:none; font-size:13px; transition:background .15s, color .15s;}
+  .wb-toc a::before{content:counter(chapter, decimal-leading-zero); font-family:var(--mono); font-size:11px; color:var(--text-faint); flex-shrink:0;}
+  .wb-toc a:hover{background:var(--bg-card); color:var(--text);}
+  .wb-toc-jump{display:block; padding:9px 10px; border-radius:6px; background:var(--accent-soft); color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; margin-bottom:4px;}
+  .wb-toc-jump:hover{background:rgba(79,209,197,0.2);}
+
+  .wb-main{padding:24px 32px 100px; min-width:0;}
+
+  /* ---- Start Here hero ---- */
+  .start-here{border:1px solid var(--border-light); border-radius:12px; background:var(--bg-panel); padding:26px; margin-bottom:22px;}
+  .start-here h2{margin:0 0 6px; font-size:15px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-faint);}
+  .start-here .start-q{font-size:19px; font-weight:600; margin:0 0 18px;}
+  .path-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:700px){.path-grid{grid-template-columns:1fr;}}
+  .path-btn{display:block; text-align:left; border-radius:10px; padding:18px 20px; border:1.5px solid; cursor:pointer; text-decoration:none; transition:transform .1s;}
+  .path-btn:hover{transform:translateY(-1px);}
+  .path-btn.emergency{background:var(--danger-bg); border-color:var(--danger-strong);}
+  .path-btn.highrisk{background:var(--warn2-bg); border-color:var(--warn2);}
+  .path-tag{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;}
+  .path-btn.emergency .path-tag{color:var(--danger);}
+  .path-btn.highrisk .path-tag{color:var(--warn2);}
+  .path-name{font-size:17px; font-weight:700; color:var(--text); display:block; margin-bottom:6px;}
+  .path-desc{font-size:13px; color:var(--text-dim); margin:0;}
+  .start-foot{margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:13.5px; color:var(--text-dim);}
+  .start-foot a{font-weight:600;}
+
+  /* ---- Algorithm flowchart mini-diagram ---- */
+  .flow-mini{display:flex; flex-direction:column; align-items:center; gap:4px; margin:20px 0; font-family:var(--mono); font-size:12.5px; color:var(--text-dim); text-align:center;}
+  .flow-node{background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:8px 16px;}
+  .flow-node.root{color:var(--text); font-weight:700;}
+  .flow-arrow{color:var(--text-faint);}
+  .flow-branch{display:flex; gap:40px; margin-top:4px;}
+  .flow-branch .flow-col{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .flow-node.em{border-color:var(--danger-strong); color:var(--danger);}
+  .flow-node.hr{border-color:var(--warn2); color:var(--warn2);}
+
+  /* ---- Algorithm stepper (interactive decision tree) ---- */
+  .algo-block{border:1.5px solid var(--border-light); border-radius:12px; background:var(--bg-panel); margin-bottom:22px; overflow:hidden; scroll-margin-top:16px;}
+  .algo-block.emergency-block{border-color:var(--danger-strong);}
+  .algo-block.highrisk-block{border-color:var(--warn2);}
+  .algo-head{padding:18px 22px; border-bottom:1px solid var(--border);}
+  .algo-head h2{margin:0; font-size:18px;}
+  .algo-head .algo-icon{font-size:20px; margin-right:8px;}
+  .algo-body{padding:22px;}
+
+  .full-algo{margin-top:0;}
+  .fa-node{background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:6px 0 6px 0;}
+  .fa-q{font-weight:600; font-size:13.5px; margin:0 0 4px;}
+  .fa-ex{font-size:12px; color:var(--text-faint); margin:0 0 6px;}
+  .fa-branch{display:flex; gap:8px; font-size:12.5px; margin:0;}
+  .fa-branch .y{color:var(--danger);}
+  .fa-branch .n{color:var(--ok);}
+  .fa-indent{margin-left:20px; border-left:2px solid var(--border); padding-left:14px;}
+
+  /* ---- chapter cards (secondary sections) ---- */
+  .chapter{border:1px solid var(--border); border-radius:10px; margin-bottom:12px; background:var(--bg-panel); overflow:hidden; scroll-margin-top:16px;}
+  .chapter summary{list-style:none; cursor:pointer; padding:15px 20px; display:flex; align-items:center; gap:12px; font-weight:600; font-size:15.5px; user-select:none;}
+  .chapter summary::-webkit-details-marker{display:none;}
+  .chapter summary .num{font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--accent-soft); border-radius:5px; padding:3px 7px; flex-shrink:0;}
+  .chapter summary .chev{margin-left:auto; color:var(--text-faint); transition:transform .2s; font-size:13px;}
+  .chapter[open] summary .chev{transform:rotate(90deg);}
+  .chapter summary:hover{background:var(--bg-card-hover);}
+  .chapter-body{padding:2px 22px 22px; border-top:1px solid var(--border);}
+  .chapter-body h4{font-size:13.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;}
+  .chapter-body h4:first-child{margin-top:16px;}
+  .chapter-body p{color:var(--text-dim); margin:8px 0;}
+  .chapter-body ul, .chapter-body ol{color:var(--text-dim); padding-left:20px; margin:8px 0;}
+  .chapter-body li{margin-bottom:5px;}
+  .chapter-body strong{color:var(--text);}
+
+  .pearl, .warn, .info{border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; border:1px solid;}
+  .pearl{background:var(--pearl-bg); border-color:rgba(227,179,65,0.35);}
+  .pearl::before{content:"KEY POINT"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--pearl); margin-bottom:4px;}
+  .warn{background:var(--danger-bg); border-color:rgba(232,116,124,0.35);}
+  .warn::before{content:"DON'T MISS"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--danger); margin-bottom:4px;}
+  .info{background:var(--bg-card); border-color:var(--border-light); color:var(--text-dim);}
+  .info::before{content:"PLACEHOLDER — FUTURE MODULE"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--text-faint); margin-bottom:4px;}
+
+  table.wb-table{width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px;}
+  table.wb-table th{text-align:left; background:var(--bg-card); color:var(--accent); font-family:var(--mono); font-size:11px; letter-spacing:0.04em; text-transform:uppercase; padding:9px 12px; border-bottom:1px solid var(--border-light);}
+  table.wb-table td{padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text-dim); vertical-align:top;}
+  table.wb-table tr:last-child td{border-bottom:none;}
+  table.wb-table td strong{color:var(--text);}
+
+  /* ---- interactive checklist ---- */
+  .check-list{list-style:none; padding:0; margin:12px 0;}
+  .check-list li{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:6px; cursor:pointer; font-size:14px; color:var(--text-dim); border:1px solid transparent;}
+  .check-list li:hover{background:var(--bg-card);}
+  .check-list li input{width:16px; height:16px; accent-color:var(--warn2);}
+  .check-list li.checked{color:var(--text); border-color:var(--warn2); background:var(--warn2-bg);}
+  .check-result{margin-top:14px; padding:12px 16px; border-radius:8px; font-size:14px; font-weight:600; border:1.5px solid var(--border-light); background:var(--bg-card);}
+  .check-result.hit{border-color:var(--warn2); background:var(--warn2-bg); color:var(--warn2);}
+  .check-result.clear{border-color:var(--ok); background:var(--ok-bg); color:var(--ok);}
+
+  /* ---- ID migraine tool ---- */
+  .idm-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0;}
+  @media (max-width:600px){.idm-grid{grid-template-columns:1fr;}}
+  .idm-card{border:1.5px solid var(--border-light); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:var(--bg-card); transition:.15s;}
+  .idm-card .idm-label{font-family:var(--mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:8px;}
+  .idm-card .idm-q{font-size:13px; color:var(--text-dim); margin:0 0 12px;}
+  .idm-card .idm-state{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--text-faint);}
+  .idm-card.on{border-color:var(--warn2); background:var(--warn2-bg);}
+  .idm-card.on .idm-state{color:var(--warn2);}
+  .idm-result{margin-top:6px; padding:14px 18px; border-radius:8px; border:1.5px solid var(--border-light); background:var(--bg-card); font-size:14px;}
+  .idm-result.pos{border-color:var(--warn2); background:var(--warn2-bg); color:var(--warn2); font-weight:600;}
+  .idm-result.neg{border-color:var(--ok); background:var(--ok-bg); color:var(--ok); font-weight:600;}
+
+  /* ---- phenotype cards ---- */
+  .pheno-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:14px 0;}
+  @media (max-width:800px){.pheno-grid{grid-template-columns:1fr;}}
+  .pheno-card{border:1px solid var(--border-light); border-radius:10px; background:var(--bg-card); overflow:hidden;}
+  .pheno-card summary{list-style:none; cursor:pointer; padding:16px; font-weight:700; font-size:15px;}
+  .pheno-card summary::-webkit-details-marker{display:none;}
+  .pheno-card .pheno-tagline{display:block; font-weight:400; font-size:12.5px; color:var(--text-faint); margin-top:4px; font-family:var(--mono);}
+  .pheno-card-body{padding:0 16px 16px; font-size:13.5px; color:var(--text-dim);}
+  .pheno-card-body ul{margin:6px 0; padding-left:18px;}
+
+  /* ---- searchable clue table ---- */
+  .clue-search{width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px 12px; font-family:var(--sans); font-size:14px; margin-bottom:12px;}
+  .clue-search::placeholder{color:var(--text-faint);}
+  #clueEmpty{display:none; color:var(--text-faint); font-size:13.5px; padding:10px 0;}
+
+  /* ---- footer ---- */
+  .wb-footer{grid-column:1/-1; padding:24px 32px 40px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-faint); line-height:1.6;}
+  .wb-footer a{color:var(--text-dim);}
+  .wb-footer a:hover{color:var(--accent);}
+
+  /* ---- mobile sticky algorithm button ---- */
+  .sticky-algo-btn{position:fixed; bottom:18px; right:18px; z-index:50; background:var(--danger-strong); color:#fff; font-family:var(--mono); font-size:12.5px; font-weight:700; border:none; border-radius:24px; padding:12px 18px; box-shadow:0 4px 14px rgba(0,0,0,0.4); cursor:pointer; display:none; align-items:center; gap:6px;}
+  .sticky-algo-btn.show{display:flex;}
+
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-light); border-radius:5px;}
+
+  @media (max-width:860px){
+    .wb-shell{grid-template-columns:1fr;}
+    .wb-toc{position:relative; border-right:none; border-bottom:1px solid var(--border); max-height:none;}
+  }
+
+  /* ---- 4-door hero (epilepsy-specific) ---- */
+  .door-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  @media (max-width:1000px){.door-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:600px){.door-grid{grid-template-columns:1fr;}}
+  .door-btn{display:block; text-align:left; border-radius:10px; padding:16px 16px; border:1.5px solid; cursor:pointer; text-decoration:none; transition:transform .1s;}
+  .door-btn:hover{transform:translateY(-1px);}
+  .door-btn.door-emergency{background:var(--danger-bg); border-color:var(--danger-strong);}
+  .door-btn.door-workup{background:var(--accent-soft); border-color:var(--accent);}
+  .door-btn.door-chronic{background:var(--warn2-bg); border-color:var(--warn2);}
+  .door-btn.door-mimic{background:var(--bg-card); border-color:var(--border-light);}
+  .door-tag{font-family:var(--mono); font-size:10.5px; letter-spacing:0.07em; text-transform:uppercase; display:block; margin-bottom:6px;}
+  .door-emergency .door-tag{color:var(--danger);}
+  .door-workup .door-tag{color:var(--accent);}
+  .door-chronic .door-tag{color:var(--warn2);}
+  .door-mimic .door-tag{color:var(--text-faint);}
+  .door-q{font-size:13.5px; color:var(--text-dim); margin:0 0 8px; font-style:italic;}
+  .door-name{font-size:15px; font-weight:700; color:var(--text); display:block;}
+
+  /* ---- status epilepticus timeline ---- */
+  .timeline{position:relative; margin:16px 0; padding-left:26px; border-left:2.5px solid var(--border-light);}
+  .tl-step{position:relative; margin-bottom:22px; padding-bottom:4px;}
+  .tl-step:last-child{margin-bottom:0;}
+  .tl-step::before{content:""; position:absolute; left:-32.5px; top:2px; width:14px; height:14px; border-radius:50%; background:var(--bg); border:2.5px solid var(--accent);}
+  .tl-step.tl-refractory::before{border-color:var(--danger-strong); background:var(--danger-strong);}
+  .tl-time{font-family:var(--mono); font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:4px;}
+  .tl-refractory .tl-time{color:var(--danger);}
+  .tl-title{font-size:15.5px; font-weight:700; margin:0 0 8px;}
+  .tl-body{font-size:13.5px; color:var(--text-dim);}
+  .tl-body ul{margin:6px 0; padding-left:18px;}
+
+  table.dose-table{width:100%; border-collapse:collapse; margin:10px 0 16px; font-size:13px;}
+  table.dose-table th{text-align:left; background:var(--bg-panel); color:var(--text-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:0.03em; text-transform:uppercase; padding:7px 10px; border-bottom:1px solid var(--border-light);}
+  table.dose-table td{padding:7px 10px; border-bottom:1px solid var(--border); color:var(--text-dim);}
+  table.dose-table td strong{color:var(--text);}
+  table.dose-table tr:last-child td{border-bottom:none;}
+  .fa-leaf{margin:4px 0 8px 20px; padding:8px 12px; background:var(--bg-panel); border-left:2px solid var(--border-light); border-radius:4px; font-size:12.5px; color:var(--text-dim);}
+</style>
+
+<body>
+
+<header class="site-topbar">
+  <button class="site-hamburger" aria-label="Menu">☰</button>
+  <a class="site-wordmark" href="index.html"><strong>NEUROBUREAU</strong></a>
+</header>
+<p class="site-breadcrumb"><a href="index.html">← NeuroBureau home</a></p>
+
+<div class="wb-shell">
+
+  <div class="wb-header">
+    <p class="wb-eyebrow">Epilepsy · Clinical Decision Tool</p>
+    <h1 class="wb-title">Epilepsy</h1>
+    <p class="wb-subtitle">What is happening right now? A bedside tool for active seizure management, first-seizure workup, and recurrence-risk assessment — not a textbook chapter.</p>
+  </div>
+
+  <nav class="wb-toc" id="wbToc">
+    <a class="wb-toc-jump" href="#algo1">🚨 Status Epilepticus</a>
+    <a class="wb-toc-jump" href="#algo2">🧠 First Seizure</a>
+    <a class="wb-toc-jump" href="#algo3">⚡ Provoked Seizure</a>
+    <a class="wb-toc-jump" href="#algo4">🔁 Unprovoked Seizure</a>
+    <p class="wb-toc-label">Reference Chapters</p>
+    <ol id="wbTocList">
+      <li><a href="#ch-semiology">Seizure Semiology</a></li>
+      <li><a href="#ch-localize">Localize the Seizure</a></li>
+      <li><a href="#ch-postictal">Postictal = Information</a></li>
+      <li><a href="#ch-workup">First-Seizure Workup</a></li>
+      <li><a href="#ch-mimics">Seizure Mimics</a></li>
+      <li><a href="#ch-disposition">Disposition</a></li>
+      <li><a href="#ch-safety">Discharge &amp; Safety</a></li>
+      <li><a href="#ch-chronic">Chronic Epilepsy Management</a></li>
+    </ol>
+  </nav>
+
+  <main class="wb-main">
+
+    <!-- ================= START HERE — 4 DOORS ================= -->
+    <div class="start-here" id="start-here">
+      <h2>What Is Happening Right Now?</h2>
+      <p class="start-q">Pick the door that matches the clinical situation.</p>
+      <div class="door-grid">
+        <a class="door-btn door-emergency" href="#algo1">
+          <span class="door-tag">🚨 Seizing Now</span>
+          <p class="door-q">Is the patient seizing right now?</p>
+          <span class="door-name">Status Epilepticus</span>
+        </a>
+        <a class="door-btn door-workup" href="#algo2">
+          <span class="door-tag">🧠 Seizure Just Ended</span>
+          <p class="door-q">First seizure — was it actually a seizure?</p>
+          <span class="door-name">First-Seizure Workup</span>
+        </a>
+        <a class="door-btn door-chronic" href="#ch-chronic">
+          <span class="door-tag">🔁 Recurrent / Known Epilepsy</span>
+          <p class="door-q">Already diagnosed — chronic management?</p>
+          <span class="door-name">Epilepsy Management</span>
+        </a>
+        <a class="door-btn door-mimic" href="#ch-mimics">
+          <span class="door-tag">❓ Not Sure It Was a Seizure</span>
+          <p class="door-q">Could this be a mimic?</p>
+          <span class="door-name">Seizure Mimic Tool</span>
+        </a>
+      </div>
+
+      <div class="flow-mini">
+        <div class="flow-node root">PATIENT WITH SEIZURE</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">SEIZING NOW?</div>
+        <div class="flow-branch">
+          <div class="flow-col">
+            <div class="flow-arrow">YES</div>
+            <div class="flow-node em">🚨 STATUS<br>ALGORITHM</div>
+          </div>
+          <div class="flow-col">
+            <div class="flow-arrow">NO</div>
+            <div class="flow-node">FIRST SEIZURE?</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node">WAS IT A SEIZURE?</div>
+            <div class="flow-branch">
+              <div class="flow-col">
+                <div class="flow-arrow">NO</div>
+                <div class="flow-node">SEIZURE MIMIC</div>
+              </div>
+              <div class="flow-col">
+                <div class="flow-arrow">YES</div>
+                <div class="flow-node">PROVOKED OR<br>UNPROVOKED?</div>
+                <div class="flow-branch">
+                  <div class="flow-col">
+                    <div class="flow-arrow">PROVOKED</div>
+                    <div class="flow-node hr">⚡ PROVOKED<br>ALGORITHM</div>
+                  </div>
+                  <div class="flow-col">
+                    <div class="flow-arrow">UNPROVOKED</div>
+                    <div class="flow-node hr">🔁 RECURRENCE-RISK<br>ALGORITHM</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ALGORITHM 1 — STATUS EPILEPTICUS ================= -->
+    <section class="algo-block emergency-block" id="algo1">
+      <div class="algo-head">
+        <h2><span class="algo-icon">🚨</span>Algorithm 1 — Status Epilepticus</h2>
+      </div>
+      <div class="algo-body">
+        <div class="timeline">
+
+          <div class="tl-step">
+            <span class="tl-time">0 min</span>
+            <p class="tl-title">Immediate Stabilization</p>
+            <div class="tl-body">
+              <ul>
+                <li>Airway / breathing / circulation</li>
+                <li>Oxygen</li>
+                <li>Cardiorespiratory monitoring</li>
+                <li>IV/IO access</li>
+                <li>Point-of-care glucose</li>
+                <li>Electrolytes + relevant laboratory evaluation</li>
+                <li>Search for reversible cause</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="tl-step">
+            <span class="tl-time">First-Line — Benzodiazepine</span>
+            <p class="tl-title">Give Benzodiazepine</p>
+            <table class="dose-table">
+              <thead><tr><th>Drug</th><th>Route</th><th>Dose</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Lorazepam</strong></td><td>IV/IO</td><td>0.1 mg/kg, max 4 mg/dose; max rate 2 mg/min</td></tr>
+                <tr><td><strong>Diazepam</strong></td><td>IV/IO</td><td>0.15 mg/kg, max 10 mg/dose; max rate 5 mg/min</td></tr>
+                <tr><td><strong>Clonazepam</strong></td><td>IV</td><td>0.015 mg/kg as rapid bolus over 30 sec</td></tr>
+                <tr><td><strong>Midazolam</strong></td><td>IM/buccal/intranasal</td><td>10 mg if &gt;40 kg; 0.2 mg/kg IM</td></tr>
+                <tr><td><strong>Diazepam</strong></td><td>Rectal</td><td>0.2 mg/kg, max 20 mg</td></tr>
+                <tr><td><strong>Diazepam</strong></td><td>Intranasal</td><td>0.2 mg/kg, max 20 mg</td></tr>
+              </tbody>
+            </table>
+            <div class="warn">If IV/IO access is not achieved within 3 minutes — give midazolam IM (10 mg or 0.2 mg/kg), buccal (10 mg), or intranasal (10 mg — 5 mg in each nostril if using the nasal-spray formulation).</div>
+          </div>
+
+          <div class="tl-step">
+            <span class="tl-time">Second-Line ASM</span>
+            <p class="tl-title">After Appropriate Benzodiazepine Treatment</p>
+            <table class="dose-table">
+              <thead><tr><th>Drug</th><th>Dose</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Levetiracetam</strong></td><td>60 mg/kg IV/IO, max 4,500 mg, over 5–15 min</td></tr>
+                <tr><td><strong>Fosphenytoin</strong></td><td>20 mg PE/kg IV, 100–150 mg PE/min</td></tr>
+                <tr><td><strong>Valproate</strong></td><td>40 mg/kg IV/IO, max 3,000 mg, 10 mg/kg/min</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="tl-step">
+            <span class="tl-time">5–10 min</span>
+            <p class="tl-title">Reassess</p>
+            <div class="tl-body">
+              <p><strong>Seizure stopped?</strong> → Continue monitoring / evaluate cause.</p>
+              <p><strong>Still seizing?</strong> → Second benzodiazepine.</p>
+            </div>
+          </div>
+
+          <div class="tl-step">
+            <span class="tl-time">10–15 min</span>
+            <p class="tl-title">Still Seizing</p>
+            <div class="tl-body"><p>→ Neurology consult + consider EEG.</p></div>
+          </div>
+
+          <div class="tl-step">
+            <span class="tl-time">15–30 min</span>
+            <p class="tl-title">Still Seizing</p>
+            <div class="tl-body"><p>→ Prepare for refractory status epilepticus.</p></div>
+          </div>
+
+          <div class="tl-step tl-refractory">
+            <span class="tl-time">&gt; 30 min — Refractory SE</span>
+            <p class="tl-title">ICU-Level Management</p>
+            <table class="dose-table">
+              <thead><tr><th>Drug</th><th>Dose</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Midazolam</strong></td><td>Load 0.2 mg/kg IV; start 0.1 mg/kg/hr; titrate to seizure freedom; max 3 mg/kg/hr</td></tr>
+                <tr><td><strong>Propofol</strong></td><td>Load 1–2 mg/kg over 5 min, may repeat 0.5–2 mg/kg; start infusion 20 mcg/kg/min; titrate; max 200 mcg/kg/min (max total 5 mg/kg/hr)</td></tr>
+                <tr><td><strong>Pentobarbital</strong></td><td>Load 5 mg/kg IV over 10 min (max rate 50 mg/min), additional 5 mg/kg if seizures continue; start 1 mg/kg/hr; titrate; max 5 mg/kg/hr</td></tr>
+              </tbody>
+            </table>
+            <div class="pearl">Continuous EEG and ICU-level monitoring are indicated for refractory status epilepticus, and whenever a patient fails to return to baseline after apparent seizure cessation.</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ALGORITHM 2 — FIRST SEIZURE ================= -->
+    <section class="algo-block highrisk-block" id="algo2">
+      <div class="algo-head">
+        <h2><span class="algo-icon">🧠</span>Algorithm 2 — First Seizure</h2>
+      </div>
+      <div class="algo-body">
+        <div class="full-algo show" id="fa2"></div>
+      </div>
+    </section>
+
+    <!-- ================= ALGORITHM 3 — FIRST PROVOKED SEIZURE ================= -->
+    <section class="algo-block highrisk-block" id="algo3">
+      <div class="algo-head">
+        <h2><span class="algo-icon">⚡</span>Algorithm 3 — First Provoked (Acute Symptomatic) Seizure</h2>
+      </div>
+      <div class="algo-body">
+        <div class="full-algo show" id="fa3"></div>
+      </div>
+    </section>
+
+    <!-- ================= ALGORITHM 4 — FIRST UNPROVOKED SEIZURE ================= -->
+    <section class="algo-block highrisk-block" id="algo4">
+      <div class="algo-head">
+        <h2><span class="algo-icon">🔁</span>Algorithm 4 — First Unprovoked Seizure</h2>
+      </div>
+      <div class="algo-body">
+        <div class="full-algo show" id="fa4"></div>
+        <div class="pearl">Epilepsy is defined as ≥2 unprovoked seizures more than 24 hours apart, OR one unprovoked seizure with a sufficiently high recurrence risk, OR an epilepsy syndrome.</div>
+      </div>
+    </section>
+
+    <!-- ================= SEMIOLOGY ================= -->
+    <details class="chapter" id="ch-semiology">
+      <summary><span class="num">01</span> Seizure Semiology — What Did It Look Like?<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>Focal</h4>
+        <ul>
+          <li><strong>Awareness preserved</strong> → Focal aware</li>
+          <li><strong>Awareness impaired</strong> → Focal impaired awareness</li>
+          <li><strong>Then bilateral tonic-clonic</strong> → Focal to bilateral tonic-clonic</li>
+        </ul>
+        <h4>Generalized</h4>
+        <ul>
+          <li>Generalized tonic-clonic</li>
+          <li>Absence</li>
+          <li>Myoclonic</li>
+          <li>Clonic</li>
+          <li>Tonic</li>
+          <li>Atonic</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ================= LOCALIZE ================= -->
+    <details class="chapter" id="ch-localize">
+      <summary><span class="num">02</span> Localize the Seizure<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>The earliest ictal behavior can provide localization/lateralization information.</p>
+        <table class="wb-table">
+          <thead><tr><th>First symptom</th><th>Localization</th></tr></thead>
+          <tbody>
+            <tr><td>Visual flashing/lights</td><td>Occipital</td></tr>
+            <tr><td>Contralateral rhythmic motor activity</td><td>Motor cortex</td></tr>
+            <tr><td>Spatial distortion</td><td>Parietal</td></tr>
+            <tr><td>Sudden speech difficulty</td><td>Dominant frontal/perisylvian network</td></tr>
+            <tr><td>Olfactory/gustatory aura</td><td>Temporal network</td></tr>
+            <tr><td>Fear/panic sensation</td><td>Temporal/frontal possibilities</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- ================= POSTICTAL ================= -->
+    <details class="chapter" id="ch-postictal">
+      <summary><span class="num">03</span> Postictal = Information<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>Postictal findings to document:</p>
+        <ul>
+          <li>Confusion / somnolence</li>
+          <li>Todd paresis</li>
+          <li>Aphasia</li>
+          <li>Hemianopia</li>
+          <li>Numbness</li>
+        </ul>
+        <div class="warn">Persistent failure to return to baseline → think ongoing nonconvulsive seizure → EEG.</div>
+      </div>
+    </details>
+
+    <!-- ================= WORKUP ================= -->
+    <details class="chapter" id="ch-workup" open>
+      <summary><span class="num">04</span> First-Seizure Workup<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>Labs — Always Think</h4>
+        <ul>
+          <li>Glucose</li>
+          <li>Na</li>
+          <li>Ca</li>
+          <li>Mg</li>
+          <li>CBC</li>
+          <li>Renal function</li>
+          <li>LFTs</li>
+          <li>Lactate</li>
+          <li>Urinalysis</li>
+        </ul>
+        <p>Conditional: toxicology (if exposure suspected), pregnancy test (when relevant).</p>
+
+        <h4>CT vs MRI</h4>
+        <table class="wb-table">
+          <tbody>
+            <tr><td><strong>CT first</strong></td><td>Emergency/concerning presentation — persistent altered mental status, focal deficit, fever, persistent headache, focal-onset seizure, acute trauma, malignancy, immunocompromise, anticoagulation/bleeding risk</td></tr>
+            <tr><td><strong>MRI preferred</strong></td><td>Stable patient / outpatient setting</td></tr>
+          </tbody>
+        </table>
+        <div class="info" style="border-color:var(--border-light);"><span style="font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--accent); display:block; margin-bottom:4px;">ORDER — COPY/PASTE</span>MRI BRAIN — EPILEPSY PROTOCOL<br><br>3D T1 · T2/STIR · FLAIR · susceptibility-sensitive sequence · thin contiguous slices · dedicated hippocampal/coronal imaging</div>
+
+        <h4>EEG Decision</h4>
+        <table class="wb-table">
+          <tbody>
+            <tr><td><strong>Not back to baseline</strong></td><td>Urgent EEG / cEEG — especially persistent altered mental status, concern for NCSE, refractory SE, unexplained prolonged deficit</td></tr>
+            <tr><td><strong>Back to baseline</strong></td><td>Outpatient EEG</td></tr>
+          </tbody>
+        </table>
+        <div class="warn">A normal EEG does not exclude epilepsy.</div>
+
+        <h4>Do I Need an LP?</h4>
+        <ul>
+          <li>Fever / meningismus / encephalitic picture → yes</li>
+          <li>Concern for meningeal malignancy / chronic meningitis → yes</li>
+          <li>SAH concern with nondiagnostic imaging → yes, follow SAH pathway</li>
+          <li>Otherwise → usually not routine</li>
+        </ul>
+        <div class="warn">LP can be misleading after prolonged convulsive seizures. Exclude a space-occupying lesion first when LP is otherwise indicated.</div>
+      </div>
+    </details>
+
+    <!-- ================= MIMICS ================= -->
+    <details class="chapter" id="ch-mimics" open>
+      <summary><span class="num">05</span> Seizure Mimics — Source-Based Differential<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>Seizure diagnosis is clinical and requires differentiating it from several mimics:</p>
+        <ul>
+          <li>Syncope</li>
+          <li>Convulsive syncope</li>
+          <li>TIA</li>
+          <li>Migraine</li>
+          <li>Panic/anxiety</li>
+          <li>Functional/dissociative seizure</li>
+          <li>Transient global amnesia</li>
+          <li>Narcolepsy/cataplexy</li>
+          <li>Paroxysmal movement disorder</li>
+          <li>Sleep disorders</li>
+        </ul>
+        <div class="pearl">Lateral tongue bite is a highly specific clue for epileptic seizure — but its absence does NOT rule out seizure. Specificity is high; sensitivity is relatively low. Urinary incontinence has much lower diagnostic utility.</div>
+        <div class="info">A structured seizure-vs-syncope-vs-functional-seizure-vs-migraine comparison table (onset, motor activity, duration, recovery, tongue bite, incontinence, triggers, post-event state) is planned as a separately sourced evidence module — not fabricated here from this page's source material.</div>
+      </div>
+    </details>
+
+    <!-- ================= DISPOSITION ================= -->
+    <details class="chapter" id="ch-disposition">
+      <summary><span class="num">06</span> Disposition — Admit or Discharge?<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>Admit / Observe If</h4>
+        <ul>
+          <li>Prolonged postictal state</li>
+          <li>Incomplete recovery</li>
+          <li>Serious seizure-related injury</li>
+          <li>Status epilepticus</li>
+          <li>Serious neurologic/systemic illness</li>
+          <li>Inability to complete outpatient workup reliably</li>
+        </ul>
+        <h4>Possible Discharge If</h4>
+        <ul>
+          <li>Returned to baseline</li>
+          <li>Initial evaluation reassuring</li>
+          <li>No major acute illness/injury</li>
+          <li>Reliable follow-up</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ================= SAFETY ================= -->
+    <details class="chapter" id="ch-safety">
+      <summary><span class="num">07</span> Discharge &amp; Safety — Don't Forget Before They Leave<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>Ask about and counsel on:</p>
+        <ul>
+          <li>Driving restrictions</li>
+          <li>Swimming</li>
+          <li>Bathing</li>
+          <li>Heights</li>
+          <li>Heavy machinery</li>
+          <li>Sleep deprivation</li>
+          <li>Alcohol</li>
+          <li>Medications/substances</li>
+        </ul>
+        <div class="warn">Driving restrictions vary by jurisdiction — check current state-specific driving restrictions rather than relying on a fixed interval.</div>
+      </div>
+    </details>
+
+    <!-- ================= CHRONIC PLACEHOLDER ================= -->
+    <details class="chapter" id="ch-chronic">
+      <summary><span class="num">08</span> Chronic Epilepsy Management<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <div class="info">This page's source material covers first-seizure evaluation and acute seizure/status management, not comprehensive chronic-epilepsy treatment. ASM selection, epilepsy syndromes, refractory epilepsy, EEG interpretation, NCSE, and epilepsy surgery are planned as separate dedicated NeuroBureau modules.</div>
+      </div>
+    </details>
+
+  </main>
+
+  <div class="wb-footer">
+    <p>Adapted from resident-supplied epilepsy evaluation and status epilepticus material, transformed into original NeuroBureau language. Status epilepticus dosing is consistent with AES and ACEP adult clinical guidance. This page does not include a chronic epilepsy treatment chapter — see Chronic Epilepsy Management for scope.</p>
+    <p>See <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for how to add to this page. <a href="index.html">← Back to NeuroBureau home</a></p>
+  </div>
+</div>
+
+<button class="sticky-algo-btn" id="stickyAlgoBtn" onclick="document.getElementById('start-here').scrollIntoView({behavior:'smooth'})">⚡ Epilepsy Algorithms</button>
+
+<script>
+/* ============================================================
+   Generalized branching-tree engine (both YES and NO may lead
+   to another gate id, or to a terminal result).
+   ============================================================ */
+const ALGO2 = {
+  start: 'wasit',
+  gates: {
+    wasit: { q:'Was this actually a seizure?', ex:['Syncope','Convulsive syncope','TIA','Migraine','Panic/anxiety','Functional/dissociative seizure','Transient global amnesia','Narcolepsy/cataplexy','Paroxysmal movement disorder','Sleep disorders'],
+      yes: 'provoked',
+      no: { tag:'MIMIC', title:'Seizure Mimic', detail:'Reconsider the differential above.', link:'#ch-mimics', linkLabel:'See Seizure Mimics →' } },
+    provoked: { q:'Provoked — is there an acute reversible or symptomatic cause?', ex:['Metabolic disturbance','Toxic exposure/withdrawal','Infection','Acute stroke/hemorrhage','Acute traumatic brain injury','Eclampsia','Other acute systemic/brain insult'],
+      yes: { tag:'PROVOKED', title:'Provoked (Acute Symptomatic) Seizure', detail:'Continue to Algorithm 3 for management.', link:'#algo3', linkLabel:'Go to Algorithm 3 →' },
+      no: { tag:'UNPROVOKED', title:'Unprovoked Seizure', detail:'Continue to Algorithm 4 for recurrence-risk assessment.', link:'#algo4', linkLabel:'Go to Algorithm 4 →' } }
+  }
+};
+
+const ALGO3 = {
+  start: 'insult',
+  gates: {
+    insult: { q:'Acute insult present?', ex:['Metabolic','Toxic','Withdrawal','Infection','Stroke','Trauma'],
+      yes: 'highrisk',
+      no: { tag:'RECONSIDER', title:'Reconsider Classification', detail:'No acute insult identified — reconsider whether this is truly a provoked seizure.', link:'#algo2', linkLabel:'← Back to Algorithm 2' } },
+    highrisk: { q:'High-risk, prolonged, or recurrent seizure?', ex:[],
+      yes: { tag:'ASM', title:'ASM Pathway', detail:'Short-term antiseizure medication may be appropriate during the acute illness. Acute symptomatic seizures generally carry lower future epilepsy risk than unprovoked seizures.' },
+      no: 'treatunderlying' },
+    treatunderlying: { q:'Reversible cause resolved?', ex:[],
+      yes: { tag:'RESOLVED', title:'Consider Stopping ASM', detail:'Treat the underlying cause. Once resolved, ASM discontinuation can be considered.' },
+      no: { tag:'ONGOING', title:'Individualized ASM Plan', detail:'Acute brain injury or unresolved cause — individualize the antiseizure medication plan.' } }
+  }
+};
+
+const ALGO4 = {
+  start: 'highriskfeatures',
+  gates: {
+    highriskfeatures: { q:'High-risk recurrence features present?', ex:['Epileptiform EEG','Epileptogenic structural lesion','Remote symptomatic brain injury','Abnormal neurologic examination','Seizure during sleep','Features suggesting an epilepsy syndrome'],
+      yes: { tag:'HIGH RISK', title:'ASM Therapy Suggested', detail:'' },
+      no: 'another' },
+    another: { q:'Another unprovoked seizure occurs?', ex:[],
+      yes: { tag:'EPILEPSY', title:'Epilepsy — Start ASM', detail:'Meets criteria for epilepsy (≥2 unprovoked seizures >24 hours apart).' },
+      no: { tag:'DEFER', title:'ASM May Be Deferred', detail:'Continue follow-up.' } }
+  }
+};
+
+function renderFullAlgo(algo, gateId){
+  const gate = algo.gates[gateId];
+  if(!gate) return '';
+  const exHtml = gate.ex && gate.ex.length ? `<p class="fa-ex">${gate.ex.join(' · ')}</p>` : '';
+
+  function branch(val, label, cls){
+    if(typeof val === 'string'){
+      return { inline:`<div class="fa-branch"><span class="${cls}">${label} →</span><span>continue</span></div>`, cont: renderFullAlgo(algo, val) };
+    }
+    const leaf = (val.detail || val.link) ? `<div class="fa-leaf">${val.detail||''}${val.link?` <a href="${val.link}" style="color:var(--accent); font-weight:600;">${val.linkLabel}</a>`:''}</div>` : '';
+    return { inline:`<div class="fa-branch"><span class="${cls}">${label} →</span><span><strong>${val.title}</strong></span></div>${leaf}`, cont:'' };
+  }
+
+  const yesB = branch(gate.yes, 'YES', 'y');
+  const noB = branch(gate.no, 'NO', 'n');
+  const node = `<div class="fa-node"><p class="fa-q">${gate.q}</p>${exHtml}${yesB.inline}${noB.inline}</div>`;
+  let indented = '';
+  if(yesB.cont){ indented += `<div class="fa-indent">${yesB.cont}</div>`; }
+  if(noB.cont){ indented += `<div class="fa-indent">${noB.cont}</div>`; }
+  return node + indented;
+}
+
+document.getElementById('fa2').innerHTML = renderFullAlgo(ALGO2, ALGO2.start);
+document.getElementById('fa3').innerHTML = renderFullAlgo(ALGO3, ALGO3.start);
+document.getElementById('fa4').innerHTML = renderFullAlgo(ALGO4, ALGO4.start);
+
+document.querySelectorAll('.wb-toc a').forEach(a => {
+  a.addEventListener('click', () => {
+    const id = a.getAttribute('href').replace('#','');
+    const el = document.getElementById(id);
+    if(el && el.tagName.toLowerCase() === 'details'){ el.open = true; }
+  });
+});
+
+const stickyBtn = document.getElementById('stickyAlgoBtn');
+const startHereEl = document.getElementById('start-here');
+window.addEventListener('scroll', () => {
+  const rect = startHereEl.getBoundingClientRect();
+  const past = rect.bottom < 0;
+  if(window.innerWidth <= 860 && past){ stickyBtn.classList.add('show'); }
+  else { stickyBtn.classList.remove('show'); }
+});
+</script>
+
+</body>
+</html>
