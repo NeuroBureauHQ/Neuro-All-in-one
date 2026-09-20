@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Headache — NeuroBureau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  This page assumes it sits at the repo root alongside emg-workbook.html,
+  eeg-workbook.html, index.html, style.css, script.js, and nav-data.js.
+  Real stylesheet/script includes left commented out below — verify class
+  names against the real header markup before enabling.
+-->
+<!-- <link rel="stylesheet" href="style.css"> -->
+<!-- <script src="nav-data.js" defer></script> -->
+<!-- <script src="script.js" defer></script> -->
+<style>
+  :root{
+    --bg:#0f1216;
+    --bg-panel:#161b21;
+    --bg-card:#1b2129;
+    --bg-card-hover:#1f2630;
+    --border:#2a323d;
+    --border-light:#333d4a;
+    --text:#e7ebf0;
+    --text-dim:#a6b0bd;
+    --text-faint:#6b7684;
+    --accent:#4fd1c5;
+    --accent-soft:rgba(79,209,197,0.12);
+    --accent-strong:#2fb8ab;
+    --pearl:#e3b341;
+    --pearl-bg:rgba(227,179,65,0.09);
+    --danger:#e8747c;
+    --danger-bg:rgba(232,116,124,0.11);
+    --danger-strong:#c94a53;
+    --warn2:#e3a341;
+    --warn2-bg:rgba(227,163,65,0.11);
+    --ok:#6fcf7a;
+    --ok-bg:rgba(111,207,122,0.10);
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55;}
+  a{color:var(--accent);}
+  h1,h2,h3,h4{font-family:var(--sans);}
+
+  /* ---- site chrome ---- */
+  .site-topbar{display:flex; align-items:center; gap:14px; padding:14px 32px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+  .site-hamburger{background:none; border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-size:16px; padding:5px 10px; cursor:pointer;}
+  .site-wordmark{font-family:var(--mono); letter-spacing:0.08em; font-size:14px; color:var(--text); text-decoration:none;}
+  .site-breadcrumb{padding:10px 32px 0; margin:0; font-size:13px;}
+  .site-breadcrumb a{color:var(--text-faint); text-decoration:none;}
+  .site-breadcrumb a:hover{color:var(--accent);}
+
+  .wb-shell{display:grid; grid-template-columns:270px 1fr; max-width:1440px; margin:0 auto; align-items:start;}
+  .wb-header{grid-column:1/-1; padding:24px 32px 8px;}
+  .wb-eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin:0 0 6px;}
+  .wb-title{font-size:32px; font-weight:700; margin:0 0 8px; letter-spacing:-0.01em;}
+  .wb-subtitle{color:var(--text-dim); font-size:15px; max-width:760px; margin:0;}
+
+  .wb-toc{position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto; padding:20px 14px 40px 32px; border-right:1px solid var(--border);}
+  .wb-toc-label{font-family:var(--mono); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin:16px 0 10px;}
+  .wb-toc ol{list-style:none; margin:0; padding:0; counter-reset:chapter;}
+  .wb-toc li{counter-increment:chapter; margin-bottom:2px;}
+  .wb-toc a{display:flex; gap:10px; align-items:baseline; padding:6px 10px; border-radius:6px; color:var(--text-dim); text-decoration:none; font-size:13px; transition:background .15s, color .15s;}
+  .wb-toc a::before{content:counter(chapter, decimal-leading-zero); font-family:var(--mono); font-size:11px; color:var(--text-faint); flex-shrink:0;}
+  .wb-toc a:hover{background:var(--bg-card); color:var(--text);}
+  .wb-toc-jump{display:block; padding:9px 10px; border-radius:6px; background:var(--accent-soft); color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; margin-bottom:4px;}
+  .wb-toc-jump:hover{background:rgba(79,209,197,0.2);}
+
+  .wb-main{padding:24px 32px 100px; min-width:0;}
+
+  /* ---- Start Here hero ---- */
+  .start-here{border:1px solid var(--border-light); border-radius:12px; background:var(--bg-panel); padding:26px; margin-bottom:22px;}
+  .start-here h2{margin:0 0 6px; font-size:15px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-faint);}
+  .start-here .start-q{font-size:19px; font-weight:600; margin:0 0 18px;}
+  .path-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:700px){.path-grid{grid-template-columns:1fr;}}
+  .path-btn{display:block; text-align:left; border-radius:10px; padding:18px 20px; border:1.5px solid; cursor:pointer; text-decoration:none; transition:transform .1s;}
+  .path-btn:hover{transform:translateY(-1px);}
+  .path-btn.emergency{background:var(--danger-bg); border-color:var(--danger-strong);}
+  .path-btn.highrisk{background:var(--warn2-bg); border-color:var(--warn2);}
+  .path-tag{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:6px;}
+  .path-btn.emergency .path-tag{color:var(--danger);}
+  .path-btn.highrisk .path-tag{color:var(--warn2);}
+  .path-name{font-size:17px; font-weight:700; color:var(--text); display:block; margin-bottom:6px;}
+  .path-desc{font-size:13px; color:var(--text-dim); margin:0;}
+  .start-foot{margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:13.5px; color:var(--text-dim);}
+  .start-foot a{font-weight:600;}
+
+  /* ---- Algorithm flowchart mini-diagram ---- */
+  .flow-mini{display:flex; flex-direction:column; align-items:center; gap:4px; margin:20px 0; font-family:var(--mono); font-size:12.5px; color:var(--text-dim); text-align:center;}
+  .flow-node{background:var(--bg-card); border:1px solid var(--border-light); border-radius:8px; padding:8px 16px;}
+  .flow-node.root{color:var(--text); font-weight:700;}
+  .flow-arrow{color:var(--text-faint);}
+  .flow-branch{display:flex; gap:40px; margin-top:4px;}
+  .flow-branch .flow-col{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .flow-node.em{border-color:var(--danger-strong); color:var(--danger);}
+  .flow-node.hr{border-color:var(--warn2); color:var(--warn2);}
+
+  /* ---- Algorithm stepper (interactive decision tree) ---- */
+  .algo-block{border:1.5px solid var(--border-light); border-radius:12px; background:var(--bg-panel); margin-bottom:22px; overflow:hidden; scroll-margin-top:16px;}
+  .algo-block.emergency-block{border-color:var(--danger-strong);}
+  .algo-block.highrisk-block{border-color:var(--warn2);}
+  .algo-head{padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border);}
+  .algo-head h2{margin:0; font-size:18px;}
+  .algo-head .algo-icon{font-size:20px; margin-right:8px;}
+  .algo-toggle-btn{font-family:var(--mono); font-size:12px; background:var(--bg-card); border:1px solid var(--border-light); color:var(--text-dim); border-radius:6px; padding:7px 12px; cursor:pointer;}
+  .algo-toggle-btn:hover{color:var(--text); border-color:var(--accent);}
+  .algo-body{padding:22px;}
+
+  .algo-trail{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; min-height:24px;}
+  .trail-chip{font-family:var(--mono); font-size:11px; background:var(--bg-card); border:1px solid var(--border); border-radius:5px; padding:4px 9px; color:var(--text-faint);}
+  .trail-chip.yes{color:var(--danger);}
+  .trail-chip.no{color:var(--ok);}
+
+  .step-card{background:var(--bg-card); border:1px solid var(--border-light); border-radius:10px; padding:18px 20px;}
+  .step-q{font-size:16px; font-weight:600; margin:0 0 10px;}
+  .step-examples{list-style:none; padding:0; margin:0 0 16px; display:flex; flex-wrap:wrap; gap:6px;}
+  .step-examples li{font-size:12px; background:var(--bg-panel); border:1px solid var(--border); border-radius:5px; padding:4px 9px; color:var(--text-dim);}
+  .step-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .step-btn{font-family:var(--sans); font-weight:600; font-size:14px; border-radius:8px; padding:10px 22px; border:1.5px solid; cursor:pointer; background:none;}
+  .step-btn.yes{border-color:var(--danger-strong); color:var(--danger);}
+  .step-btn.yes:hover{background:var(--danger-bg);}
+  .step-btn.no{border-color:var(--ok); color:var(--ok);}
+  .step-btn.no:hover{background:var(--ok-bg);}
+  .step-restart{font-family:var(--mono); font-size:12px; color:var(--text-faint); background:none; border:none; cursor:pointer; margin-top:14px; padding:0; text-decoration:underline;}
+  .step-restart:hover{color:var(--text);}
+
+  .result-card{border-radius:10px; padding:18px 20px; border:1.5px solid;}
+  .result-card.terminal-emergency{background:var(--danger-bg); border-color:var(--danger-strong);}
+  .result-card.terminal-secondary{background:var(--warn2-bg); border-color:var(--warn2);}
+  .result-card.terminal-primary{background:var(--ok-bg); border-color:var(--ok);}
+  .result-card.terminal-placeholder{background:var(--bg-card); border-color:var(--border-light);}
+  .result-tag{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:8px;}
+  .terminal-emergency .result-tag{color:var(--danger);}
+  .terminal-secondary .result-tag{color:var(--warn2);}
+  .terminal-primary .result-tag{color:var(--ok);}
+  .terminal-placeholder .result-tag{color:var(--text-faint);}
+  .result-title{font-size:17px; font-weight:700; margin:0 0 8px;}
+  .result-detail{font-size:14px; color:var(--text-dim); margin:0 0 4px;}
+  .result-detail ul{margin:6px 0 0; padding-left:18px;}
+  .result-sub{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+
+  .full-algo{display:none; margin-top:18px; padding-top:18px; border-top:1px dashed var(--border-light);}
+  .full-algo.show{display:block;}
+  .fa-node{background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:6px 0 6px 0;}
+  .fa-q{font-weight:600; font-size:13.5px; margin:0 0 4px;}
+  .fa-ex{font-size:12px; color:var(--text-faint); margin:0 0 6px;}
+  .fa-branch{display:flex; gap:8px; font-size:12.5px; margin:0;}
+  .fa-branch .y{color:var(--danger);}
+  .fa-branch .n{color:var(--ok);}
+  .fa-indent{margin-left:20px; border-left:2px solid var(--border); padding-left:14px;}
+
+  /* ---- chapter cards (secondary sections) ---- */
+  .chapter{border:1px solid var(--border); border-radius:10px; margin-bottom:12px; background:var(--bg-panel); overflow:hidden; scroll-margin-top:16px;}
+  .chapter summary{list-style:none; cursor:pointer; padding:15px 20px; display:flex; align-items:center; gap:12px; font-weight:600; font-size:15.5px; user-select:none;}
+  .chapter summary::-webkit-details-marker{display:none;}
+  .chapter summary .num{font-family:var(--mono); font-size:12px; color:var(--accent); background:var(--accent-soft); border-radius:5px; padding:3px 7px; flex-shrink:0;}
+  .chapter summary .chev{margin-left:auto; color:var(--text-faint); transition:transform .2s; font-size:13px;}
+  .chapter[open] summary .chev{transform:rotate(90deg);}
+  .chapter summary:hover{background:var(--bg-card-hover);}
+  .chapter-body{padding:2px 22px 22px; border-top:1px solid var(--border);}
+  .chapter-body h4{font-size:13.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--accent); margin:20px 0 10px;}
+  .chapter-body h4:first-child{margin-top:16px;}
+  .chapter-body p{color:var(--text-dim); margin:8px 0;}
+  .chapter-body ul, .chapter-body ol{color:var(--text-dim); padding-left:20px; margin:8px 0;}
+  .chapter-body li{margin-bottom:5px;}
+  .chapter-body strong{color:var(--text);}
+
+  .pearl, .warn, .info{border-radius:8px; padding:12px 16px; margin:14px 0; font-size:13.5px; border:1px solid;}
+  .pearl{background:var(--pearl-bg); border-color:rgba(227,179,65,0.35);}
+  .pearl::before{content:"KEY POINT"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--pearl); margin-bottom:4px;}
+  .warn{background:var(--danger-bg); border-color:rgba(232,116,124,0.35);}
+  .warn::before{content:"DON'T MISS"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--danger); margin-bottom:4px;}
+  .info{background:var(--bg-card); border-color:var(--border-light); color:var(--text-dim);}
+  .info::before{content:"PLACEHOLDER — FUTURE MODULE"; display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.1em; color:var(--text-faint); margin-bottom:4px;}
+
+  table.wb-table{width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px;}
+  table.wb-table th{text-align:left; background:var(--bg-card); color:var(--accent); font-family:var(--mono); font-size:11px; letter-spacing:0.04em; text-transform:uppercase; padding:9px 12px; border-bottom:1px solid var(--border-light);}
+  table.wb-table td{padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text-dim); vertical-align:top;}
+  table.wb-table tr:last-child td{border-bottom:none;}
+  table.wb-table td strong{color:var(--text);}
+
+  /* ---- interactive checklist ---- */
+  .check-list{list-style:none; padding:0; margin:12px 0;}
+  .check-list li{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:6px; cursor:pointer; font-size:14px; color:var(--text-dim); border:1px solid transparent;}
+  .check-list li:hover{background:var(--bg-card);}
+  .check-list li input{width:16px; height:16px; accent-color:var(--warn2);}
+  .check-list li.checked{color:var(--text); border-color:var(--warn2); background:var(--warn2-bg);}
+  .check-result{margin-top:14px; padding:12px 16px; border-radius:8px; font-size:14px; font-weight:600; border:1.5px solid var(--border-light); background:var(--bg-card);}
+  .check-result.hit{border-color:var(--warn2); background:var(--warn2-bg); color:var(--warn2);}
+  .check-result.clear{border-color:var(--ok); background:var(--ok-bg); color:var(--ok);}
+
+  /* ---- ID migraine tool ---- */
+  .idm-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0;}
+  @media (max-width:600px){.idm-grid{grid-template-columns:1fr;}}
+  .idm-card{border:1.5px solid var(--border-light); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:var(--bg-card); transition:.15s;}
+  .idm-card .idm-label{font-family:var(--mono); font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint); display:block; margin-bottom:8px;}
+  .idm-card .idm-q{font-size:13px; color:var(--text-dim); margin:0 0 12px;}
+  .idm-card .idm-state{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--text-faint);}
+  .idm-card.on{border-color:var(--warn2); background:var(--warn2-bg);}
+  .idm-card.on .idm-state{color:var(--warn2);}
+  .idm-result{margin-top:6px; padding:14px 18px; border-radius:8px; border:1.5px solid var(--border-light); background:var(--bg-card); font-size:14px;}
+  .idm-result.pos{border-color:var(--warn2); background:var(--warn2-bg); color:var(--warn2); font-weight:600;}
+  .idm-result.neg{border-color:var(--ok); background:var(--ok-bg); color:var(--ok); font-weight:600;}
+
+  /* ---- phenotype cards ---- */
+  .pheno-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:14px 0;}
+  @media (max-width:800px){.pheno-grid{grid-template-columns:1fr;}}
+  .pheno-card{border:1px solid var(--border-light); border-radius:10px; background:var(--bg-card); overflow:hidden;}
+  .pheno-card summary{list-style:none; cursor:pointer; padding:16px; font-weight:700; font-size:15px;}
+  .pheno-card summary::-webkit-details-marker{display:none;}
+  .pheno-card .pheno-tagline{display:block; font-weight:400; font-size:12.5px; color:var(--text-faint); margin-top:4px; font-family:var(--mono);}
+  .pheno-card-body{padding:0 16px 16px; font-size:13.5px; color:var(--text-dim);}
+  .pheno-card-body ul{margin:6px 0; padding-left:18px;}
+
+  /* ---- searchable clue table ---- */
+  .clue-search{width:100%; background:var(--bg-card); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:10px 12px; font-family:var(--sans); font-size:14px; margin-bottom:12px;}
+  .clue-search::placeholder{color:var(--text-faint);}
+  #clueEmpty{display:none; color:var(--text-faint); font-size:13.5px; padding:10px 0;}
+
+  /* ---- footer ---- */
+  .wb-footer{grid-column:1/-1; padding:24px 32px 40px; border-top:1px solid var(--border); font-size:12.5px; color:var(--text-faint); line-height:1.6;}
+  .wb-footer a{color:var(--text-dim);}
+  .wb-footer a:hover{color:var(--accent);}
+
+  /* ---- mobile sticky algorithm button ---- */
+  .sticky-algo-btn{position:fixed; bottom:18px; right:18px; z-index:50; background:var(--danger-strong); color:#fff; font-family:var(--mono); font-size:12.5px; font-weight:700; border:none; border-radius:24px; padding:12px 18px; box-shadow:0 4px 14px rgba(0,0,0,0.4); cursor:pointer; display:none; align-items:center; gap:6px;}
+  .sticky-algo-btn.show{display:flex;}
+
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-light); border-radius:5px;}
+
+  @media (max-width:860px){
+    .wb-shell{grid-template-columns:1fr;}
+    .wb-toc{position:relative; border-right:none; border-bottom:1px solid var(--border); max-height:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-topbar">
+  <button class="site-hamburger" aria-label="Menu">☰</button>
+  <a class="site-wordmark" href="index.html"><strong>NEUROBUREAU</strong></a>
+</header>
+<p class="site-breadcrumb"><a href="index.html">← NeuroBureau home</a></p>
+
+<div class="wb-shell">
+
+  <div class="wb-header">
+    <p class="wb-eyebrow">Headache · Clinical Decision Tool</p>
+    <h1 class="wb-title">Headache</h1>
+    <p class="wb-subtitle">Evaluate the danger before naming the headache. A bedside tool for rapid triage, phenotyping, and test selection — not a textbook chapter.</p>
+  </div>
+
+  <nav class="wb-toc" id="wbToc">
+    <a class="wb-toc-jump" href="#algo1">🚨 Jump to Algorithm 1 — Emergency</a>
+    <a class="wb-toc-jump" href="#algo2">⚠️ Jump to Algorithm 2 — High-Risk</a>
+    <p class="wb-toc-label">Reference Chapters</p>
+    <ol id="wbTocList">
+      <li><a href="#ch-redflags">Red Flags</a></li>
+      <li><a href="#ch-imaging">Imaging &amp; Testing</a></li>
+      <li><a href="#ch-lowrisk">When No Testing Is Needed</a></li>
+      <li><a href="#ch-phenotype">Phenotype the Headache</a></li>
+      <li><a href="#ch-tools">Interactive Tools</a></li>
+      <li><a href="#ch-history">Clinical History</a></li>
+      <li><a href="#ch-exam">Examination</a></li>
+      <li><a href="#ch-secondary">Secondary Headache: Clue → Cause</a></li>
+      <li><a href="#ch-special">Special Situations</a></li>
+      <li><a href="#ch-recap">30-Second Recap</a></li>
+    </ol>
+  </nav>
+
+  <main class="wb-main">
+
+    <!-- ================= START HERE ================= -->
+    <div class="start-here" id="start-here">
+      <h2>Start Here</h2>
+      <p class="start-q">Does this headache have a feature suggesting a dangerous secondary cause?</p>
+      <div class="path-grid">
+        <a class="path-btn emergency" href="#algo1">
+          <span class="path-tag">🚨 Emergency Pathway</span>
+          <span class="path-name">Algorithm 1</span>
+          <p class="path-desc">Thunderclap onset, neurologic deficit, fever/meningismus, papilledema/orbital symptoms, possible CO exposure.</p>
+        </a>
+        <a class="path-btn highrisk" href="#algo2">
+          <span class="path-tag">⚠️ High-Risk / Non-Emergency Pathway</span>
+          <span class="path-name">Algorithm 2</span>
+          <p class="path-desc">New pattern, age &gt;50, pregnancy, immunosuppression, persistent/progressive headache, positional symptoms.</p>
+        </a>
+      </div>
+      <p class="start-foot">No high-risk features? <a href="#ch-phenotype">Phenotype the headache →</a> primary headache pathway.</p>
+
+      <div class="flow-mini">
+        <div class="flow-node root">HEADACHE</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node">DANGEROUS FEATURES?</div>
+        <div class="flow-branch">
+          <div class="flow-col">
+            <div class="flow-arrow">YES</div>
+            <div class="flow-node em">🚨 ALGORITHM 1<br>EMERGENCY</div>
+          </div>
+          <div class="flow-col">
+            <div class="flow-arrow">NO</div>
+            <div class="flow-node hr">⚠️ ALGORITHM 2<br>HIGH-RISK</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-node">PRIMARY HEADACHE PATHWAY</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ALGORITHM 1 — EMERGENCY ================= -->
+    <section class="algo-block emergency-block" id="algo1">
+      <div class="algo-head">
+        <h2><span class="algo-icon">🚨</span>Algorithm 1 — Does This Require Emergency Evaluation?</h2>
+        <button class="algo-toggle-btn" onclick="toggleFull('fa1')">View Full Algorithm</button>
+      </div>
+      <div class="algo-body">
+        <div class="algo-trail" id="trail1"></div>
+        <div id="stepper1"></div>
+        <div class="full-algo" id="fa1"></div>
+      </div>
+    </section>
+
+    <!-- ================= ALGORITHM 2 — HIGH-RISK ================= -->
+    <section class="algo-block highrisk-block" id="algo2">
+      <div class="algo-head">
+        <h2><span class="algo-icon">⚠️</span>Algorithm 2 — Does This Need Diagnostic Testing?</h2>
+        <button class="algo-toggle-btn" onclick="toggleFull('fa2')">View Full Algorithm</button>
+      </div>
+      <div class="algo-body">
+        <p style="color:var(--text-dim); font-size:13.5px; margin-top:0;">The patient isn't immediately crashing — now decide whether this headache requires further diagnostic investigation.</p>
+        <div class="algo-trail" id="trail2"></div>
+        <div id="stepper2"></div>
+        <div class="full-algo" id="fa2"></div>
+      </div>
+    </section>
+
+    <!-- ================= 04 RED FLAGS ================= -->
+    <details class="chapter" id="ch-redflags">
+      <summary><span class="num">04</span> Red Flags — Reference Table<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>Any of the following warrant prompt secondary headache evaluation. A single positive feature does not automatically mean imaging — urgency and test choice depend on clinical context.</p>
+        <table class="wb-table">
+          <thead><tr><th>Category</th><th>Features</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Emergency</strong></td><td>Thunderclap onset, new/progressive neurologic deficit, new seizure, altered mental status, intractable nausea/vomiting, fever ± meningismus, papilledema, acute visual loss/diplopia/orbital symptoms, possible CO exposure</td></tr>
+            <tr><td><strong>Other high-risk</strong></td><td>New persistent/daily headache, new or changing pattern, side-locked unilateral headache, postural headache, new visual symptoms, pregnancy/postpartum, age ≥50 at onset, immunosuppression, anticoagulant/relevant medication exposure, morning-predominant headache, oromaxillofacial symptoms</td></tr>
+          </tbody>
+        </table>
+        <div class="warn">Thunderclap headache is defined as severe headache reaching maximal intensity within one minute — it requires urgent evaluation regardless of how the patient looks in between attacks.</div>
+      </div>
+    </details>
+
+    <!-- ================= 05 IMAGING ================= -->
+    <details class="chapter" id="ch-imaging">
+      <summary><span class="num">05</span> Imaging &amp; Testing<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>CT</h4>
+        <p><strong>Best fit:</strong> emergency evaluation. Fast, widely available, detects many acute life-threatening causes, and can be combined with CTA/CTV.</p>
+
+        <h4>MRI</h4>
+        <p><strong>Best fit:</strong> nonemergency/elective secondary headache evaluation. More sensitive for many secondary causes, no ionizing radiation.</p>
+
+        <h4>CTA / MRA</h4>
+        <p>When arterial pathology is suspected — dissection, RCVS, other suspected arterial abnormality.</p>
+
+        <h4>CTV / MRV</h4>
+        <p>When venous pathology is suspected — cerebral venous thrombosis.</p>
+
+        <h4>LP — Don't Forget</h4>
+        <p>Consider when:</p>
+        <ul>
+          <li>SAH suspected and CT is nondiagnostic</li>
+          <li>Infection suspected</li>
+          <li>Inflammatory/neoplastic process suspected</li>
+          <li>IIH suspected → opening pressure assessment</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ================= 06 LOW RISK ================= -->
+    <details class="chapter" id="ch-lowrisk">
+      <summary><span class="num">06</span> When Testing May Not Be Needed<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <p>Features supporting a low likelihood of serious secondary disease:</p>
+        <ul>
+          <li>Age &lt; 50</li>
+          <li>Previous similar headache attacks</li>
+          <li>No change in established pattern</li>
+          <li>No high-risk comorbidity</li>
+          <li>Normal neurologic examination</li>
+          <li>No concerning new history or examination finding</li>
+          <li>Typical migraine or TTH phenotype</li>
+        </ul>
+        <div class="pearl">Typical migraine/TTH + normal examination + no red flags → clinical diagnosis may be sufficient. Testing becomes appropriate if high-risk features develop, symptoms change or worsen, or the clinical picture becomes atypical.</div>
+      </div>
+    </details>
+
+    <!-- ================= 07 PHENOTYPE ================= -->
+    <details class="chapter" id="ch-phenotype" open>
+      <summary><span class="num">07</span> Phenotype the Headache<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <div class="pheno-grid">
+          <details class="pheno-card">
+            <summary>Migraine<span class="pheno-tagline">Unilateral · Pulsatile · 4–72h</span></summary>
+            <div class="pheno-card-body">
+              <p>Unilateral, pulsatile, moderate-severe, worse with activity, 4–72 hours.</p>
+              <p>Associated features:</p>
+              <ul>
+                <li>Nausea/vomiting</li>
+                <li>Photophobia</li>
+                <li>Phonophobia</li>
+                <li>Osmophobia</li>
+                <li>± Aura</li>
+              </ul>
+            </div>
+          </details>
+          <details class="pheno-card">
+            <summary>Tension-Type<span class="pheno-tagline">Bilateral · Nonthrobbing</span></summary>
+            <div class="pheno-card-body">
+              <p>Bilateral, mild-moderate, nonthrobbing, relatively featureless.</p>
+              <p>May have:</p>
+              <ul>
+                <li>Neck/jaw discomfort</li>
+                <li>Pericranial tenderness</li>
+              </ul>
+            </div>
+          </details>
+          <details class="pheno-card">
+            <summary>TACs<span class="pheno-tagline">Unilateral + autonomic features</span></summary>
+            <div class="pheno-card-body">
+              <p>Strictly unilateral pain with ipsilateral cranial autonomic features. Look for:</p>
+              <ul>
+                <li>Lacrimation</li>
+                <li>Conjunctival injection</li>
+                <li>Rhinorrhea/nasal congestion</li>
+                <li>Ptosis</li>
+                <li>Miosis</li>
+                <li>Eyelid edema</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+    </details>
+
+    <!-- ================= 08 INTERACTIVE TOOLS ================= -->
+    <details class="chapter" id="ch-tools" open>
+      <summary><span class="num">08</span> Interactive Tools<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>ID Migraine — 3 Questions</h4>
+        <p>Pooled sensitivity 0.84, specificity 0.76.</p>
+        <div class="idm-grid">
+          <div class="idm-card" id="idm-light" onclick="toggleIdm('light')">
+            <span class="idm-label">Photophobia</span>
+            <p class="idm-q">Did light bother you substantially more than when you don't have a headache?</p>
+            <span class="idm-state">NO</span>
+          </div>
+          <div class="idm-card" id="idm-activity" onclick="toggleIdm('activity')">
+            <span class="idm-label">Incapacity</span>
+            <p class="idm-q">Did the headache limit work, study, or usual activities for ≥1 day?</p>
+            <span class="idm-state">NO</span>
+          </div>
+          <div class="idm-card" id="idm-nausea" onclick="toggleIdm('nausea')">
+            <span class="idm-label">Nausea</span>
+            <p class="idm-q">Did you feel nauseated or sick to your stomach?</p>
+            <span class="idm-state">NO</span>
+          </div>
+        </div>
+        <div class="idm-result" id="idmResult">Click the cards above to score — 2 or 3 YES = positive screen.</div>
+
+        <h4>TAC Recognition</h4>
+        <p>Unilateral headache + autonomic features → compare by attack duration and frequency where known:</p>
+        <table class="wb-table">
+          <thead><tr><th>Syndrome</th><th>Attack pattern</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Cluster</strong></td><td>Severe unilateral orbital/temporal pain, ipsilateral autonomic symptoms, restlessness. Attacks last 15–180 minutes, occurring multiple times daily.</td></tr>
+            <tr><td><strong>Paroxysmal hemicrania</strong></td><td>Unilateral pain with autonomic features. See dedicated TAC module (coming soon) for attack duration/frequency detail.</td></tr>
+            <tr><td><strong>SUNCT / SUNA</strong></td><td>Unilateral pain with autonomic features. See dedicated TAC module (coming soon) for attack duration/frequency detail.</td></tr>
+            <tr><td><strong>Hemicrania continua</strong></td><td>Unilateral pain with autonomic features. See dedicated TAC module (coming soon) for attack duration/frequency detail.</td></tr>
+          </tbody>
+        </table>
+        <div class="info">Attack-duration/frequency specifics for paroxysmal hemicrania, SUNCT/SUNA, and hemicrania continua weren't in the source material — flagged here rather than filled in, pending a dedicated TAC module.</div>
+      </div>
+    </details>
+
+    <!-- ================= 09 HISTORY ================= -->
+    <details class="chapter" id="ch-history">
+      <summary><span class="num">09</span> Clinical History — Resident Checklist<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>Baseline</h4>
+        <ul>
+          <li>Previous headaches?</li>
+          <li>Age at onset?</li>
+          <li>Frequency?</li>
+          <li>Duration?</li>
+          <li>Number of headache days/month?</li>
+          <li>Number of days/month using acute medications?</li>
+          <li>Previous treatment and response?</li>
+        </ul>
+        <h4>Phenotype</h4>
+        <ul>
+          <li>Onset: sudden or gradual?</li>
+          <li>Location + quality?</li>
+          <li>Associated symptoms?</li>
+          <li>Triggers/relievers?</li>
+          <li>Positional or activity-related?</li>
+        </ul>
+        <h4>Don't Forget</h4>
+        <ul>
+          <li>Vision changes</li>
+          <li>Trauma</li>
+          <li>Pregnancy</li>
+          <li>Immunosuppression</li>
+          <li>Neoplasm</li>
+          <li>Medication changes</li>
+          <li>Sleep/exercise/diet changes</li>
+          <li>Hormonal/menstrual relationship</li>
+          <li>Functional disability</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ================= 10 EXAM ================= -->
+    <details class="chapter" id="ch-exam">
+      <summary><span class="num">10</span> Examination — Don't Just Check Neuro<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>Vitals</h4>
+        <ul><li>Temperature</li><li>BP</li><li>Pulse</li></ul>
+        <h4>Head/Neck</h4>
+        <ul>
+          <li>Head/neck muscles</li>
+          <li>TMJ</li>
+          <li>Shoulder region</li>
+          <li>Temporal/neck arteries</li>
+          <li>Bruits</li>
+          <li>Craniofacial rash</li>
+        </ul>
+        <h4>Neurologic</h4>
+        <ul>
+          <li>Mental status</li>
+          <li>Cranial nerve examination</li>
+          <li>Fundoscopy</li>
+          <li>Otoscopy</li>
+          <li>Motor</li>
+          <li>Sensory</li>
+          <li>Reflexes</li>
+          <li>Gait/coordination</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ================= 11 SECONDARY HEADACHE CLUE FINDER ================= -->
+    <details class="chapter" id="ch-secondary" open>
+      <summary><span class="num">11</span> Secondary Headache — Clue → Cause<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <input type="text" class="clue-search" id="clueSearch" placeholder="Search by clinical clue (e.g. thunderclap, pregnancy, fever)…" oninput="filterClues()">
+        <table class="wb-table" id="clueTable">
+          <thead><tr><th>Clinical clue</th><th>Think about</th></tr></thead>
+          <tbody id="clueBody"></tbody>
+        </table>
+        <p id="clueEmpty">No matching clues.</p>
+      </div>
+    </details>
+
+    <!-- ================= 12 SPECIAL SITUATIONS ================= -->
+    <details class="chapter" id="ch-special">
+      <summary><span class="num">12</span> Special Situations<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <h4>"It's My Sinuses" — Myth-Buster</h4>
+        <p>When a patient attributes their headache to sinuses, ask: is this actually a recurrent primary headache? Many patients labeled with "sinus headache" fulfill migraine/migrainous headache criteria, and sinus symptoms can accompany migraine.</p>
+        <table class="wb-table">
+          <thead><tr><th>More suggestive of…</th><th>Features</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Sinus/rhinogenic disease</strong></td><td>Prominent rhinogenic symptoms, fever, purulent nasal discharge, nasal obstruction/congestion, prolonged symptoms</td></tr>
+            <tr><td><strong>Migraine</strong></td><td>Recurrent self-limited attacks, functional disability, pulsatile pain, photophobia/phonophobia, nausea/vomiting</td></tr>
+          </tbody>
+        </table>
+
+        <h4>"Don't Blame the BP"</h4>
+        <p>Don't automatically attribute headache to uncomplicated chronic hypertension. Distinguish severe hypertensive states with neurologic/systemic manifestations from less severe chronic hypertension.</p>
+        <div class="warn">Think hypertensive encephalopathy/PRES when headache occurs with severe BP elevation, altered mental status, visual abnormalities, seizures, or focal neurologic symptoms.</div>
+
+        <h4>Pregnancy, CO Exposure &amp; Other Named Pathways</h4>
+        <div class="info">Pregnancy headache, CO exposure, infectious headache, ocular/temporal artery, and cerebrovascular pathways are named branch points in Algorithm 1 — each currently routes to a shared "urgent evaluation" endpoint pending dedicated NeuroBureau modules for each.</div>
+      </div>
+    </details>
+
+    <!-- ================= 13 RECAP ================= -->
+    <details class="chapter" id="ch-recap" open>
+      <summary><span class="num">13</span> 30-Second Resident Recap<span class="chev">▸</span></summary>
+      <div class="chapter-body">
+        <ol>
+          <li><strong>Thunderclap?</strong> → Emergency</li>
+          <li><strong>Neuro deficit / altered / fever / papilledema / orbital emergency?</strong> → Emergency</li>
+          <li><strong>Other red flags?</strong> → Prompt secondary evaluation</li>
+          <li><strong>No red flags + normal exam?</strong> → Phenotype</li>
+          <li><strong>Migraine / TTH?</strong> → Often clinical diagnosis</li>
+          <li><strong>TAC / new daily persistent / atypical primary phenotype?</strong> → Consider imaging at initial diagnosis</li>
+          <li><strong>Need a test?</strong> Emergency → CT ± CTA/CTV. Nonemergency → MRI ± MRA/MRV. Specific indications → LP / targeted labs.</li>
+        </ol>
+      </div>
+    </details>
+
+  </main>
+
+  <div class="wb-footer">
+    <p>Adapted from resident-supplied adult headache evaluation material, current through August 2026, last updated May 20, 2026, transformed into original NeuroBureau language. This page is an evaluation/diagnostic framework — it does not include treatment recommendations beyond what the source material specified.</p>
+    <p>See <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for how to add to this page. <a href="index.html">← Back to NeuroBureau home</a></p>
+  </div>
+</div>
+
+<button class="sticky-algo-btn" id="stickyAlgoBtn" onclick="document.getElementById('start-here').scrollIntoView({behavior:'smooth'})">⚡ Headache Algorithm</button>
+
+<script>
+/* ============================================================
+   ALGORITHM 1 — EMERGENCY
+   Sequential gate-check. Each gate: question, optional examples,
+   yes -> terminal result, no -> next gate id (or 'algo2' handoff).
+   ============================================================ */
+const ALGO1 = {
+  start: 'tc',
+  gates: {
+    tc: {
+      q: 'Sudden, severe "thunderclap" headache — maximal intensity within about one minute?',
+      ex: [],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Evaluate for SAH and Other Thunderclap Causes',
+        detail: 'Differential: subarachnoid hemorrhage, RCVS, cervical artery dissection, cerebral venous thrombosis, intracranial hemorrhage, other vascular causes.<br><br><strong>Workup:</strong><ul><li>Initial imaging: CT head</li><li>If CT nondiagnostic and SAH remains suspected → LP / CSF evaluation</li><li>Consider targeted vascular imaging when indicated: CTA/MRA for arterial pathology, CTV/MRV for venous pathology</li></ul>' },
+      no: 'men'
+    },
+    men: { q:'Features suggesting meningitis/encephalitis?', ex:['Fever','Meningismus','Acute rash','Confusion'],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Infectious Headache Pathway',
+        detail:'Route to urgent emergency evaluation.' },
+      no: 'co' },
+    co: { q:'Possible carbon monoxide exposure?', ex:['Drowsiness','Winter/power outage','Smoke/fume exposure','Multiple household members ill'],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'CO Exposure Pathway',
+        detail:'Route to urgent emergency evaluation.' },
+      no: 'oc' },
+    oc: { q:'Ocular symptoms present?', ex:['Vision loss','Eye pain','Halos','Blurred vision','Temporal artery tenderness'],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Ocular / Temporal Artery Pathway',
+        detail:'Route to urgent emergency evaluation.' },
+      no: 'def' },
+    def: { q:'New neurologic deficit?', ex:['Hemiparesis/numbness','Speech impairment','Horner syndrome','Ataxia/gait impairment'],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Cerebrovascular Pathway',
+        detail:'Route to urgent emergency evaluation.' },
+      no: 'preg' },
+    preg: { q:'Pregnant ≥20 weeks or postpartum?', ex:[],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Pregnancy Headache Pathway',
+        detail:'Route to urgent emergency evaluation.' },
+      no: 'other' },
+    other: { q:'Other dangerous secondary features present?', ex:[],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Urgent Specialist / Secondary Headache Evaluation', detail:'' },
+      no: { type:'terminal', tag:'CONTINUE', style:'terminal-secondary', title:'Continue to Algorithm 2',
+        detail:'No emergency features identified. Proceed to the High-Risk / Non-Emergency pathway below.', link:'#algo2', linkLabel:'Go to Algorithm 2 →' } }
+  }
+};
+
+/* ============================================================
+   ALGORITHM 2 — HIGH-RISK / DIAGNOSTIC TESTING
+   Gates can have a "sub" step: an action is taken, then a
+   follow-up yes/no ("Etiology identified?") determines whether
+   to terminate or continue to the next gate.
+   ============================================================ */
+const ALGO2 = {
+  start: 'emerg',
+  gates: {
+    emerg: { q:'High-risk feature requiring emergency evaluation?', ex:['Thunderclap','Anticoagulant use','Toxic appearance','Prominent eye/neck pain','Acute visual change','Abnormal neurologic examination','Seizure/syncope'],
+      yes: { type:'terminal', tag:'EMERGENCY', style:'terminal-emergency', title:'Emergency Clinical + Imaging Evaluation', detail:'' },
+      no: 'imaging' },
+    imaging: { q:'Any feature warranting neuroimaging?', ex:['Age >50','History of neoplasm','Immunosuppression','Progressive/worsening headache'],
+      yes: { type:'sub', action:'Brain imaging — CT with contrast and/or MRI with contrast', subQ:'Etiology identified?',
+        subYes:{ tag:'RESOLVED', style:'terminal-secondary', title:'Treat Secondary Cause', detail:'' },
+        subNo:'csf' },
+      no: 'csf' },
+    csf: { q:'Features warranting CSF evaluation?', ex:['Recurrent fever','Blurred/double vision','Exertional headache'],
+      yes: { type:'sub', action:'Lumbar puncture — assess CSF composition and opening pressure', subQ:'Etiology identified?',
+        subYes:{ tag:'RESOLVED', style:'terminal-secondary', title:'Treat Secondary Cause', detail:'' },
+        subNo:'vasc' },
+      no: 'vasc' },
+    vasc: { q:'Features suggesting vascular pathology?', ex:['Recurrent thunderclap','Sympathomimetic drug exposure','Horner syndrome'],
+      yes: { type:'sub', action:'Vascular imaging — CTA head/neck or MRA head/neck', subQ:'Etiology identified?',
+        subYes:{ tag:'RESOLVED', style:'terminal-secondary', title:'Treat Secondary Cause', detail:'' },
+        subNo:'ocular2' },
+      no: 'ocular2' },
+    ocular2: { q:'Ocular red flags?', ex:['Prominent eye pain','Halos','Blurred vision'],
+      yes: { type:'sub', action:'Ophthalmology evaluation', subQ:'Cause identified?',
+        subYes:{ tag:'RESOLVED', style:'terminal-secondary', title:'Disease-Specific Treatment', detail:'' },
+        subNo:'spinal' },
+      no: 'spinal' },
+    spinal: { q:'Features suggesting spinal/CSF-pressure pathology?', ex:['Positional headache relieved by recumbency','Prominent neck pain','Limb weakness/numbness','Bowel/bladder dysfunction'],
+      yes: { type:'terminal', tag:'TESTING', style:'terminal-secondary', title:'Spinal Imaging Indicated', detail:'MRI spine with contrast, or CT spine with contrast.' },
+      no: { type:'terminal', tag:'PRIMARY', style:'terminal-primary', title:'Consider a Primary Headache Syndrome',
+        detail:'No features warranting further diagnostic testing identified.', link:'#ch-phenotype', linkLabel:'Phenotype the headache →' } }
+  }
+};
+
+/* ---------------- Stepper engine ---------------- */
+function makeStepper(containerId, trailId, algo){
+  const container = document.getElementById(containerId);
+  const trailEl = document.getElementById(trailId);
+  let trail = [];
+
+  function renderTrail(){
+    trailEl.innerHTML = trail.map(t => `<span class="trail-chip ${t.a}">${t.q} → ${t.a.toUpperCase()}</span>`).join('');
+  }
+
+  function renderGate(gateId){
+    if(gateId === 'algo2'){
+      container.innerHTML = `<div class="result-card terminal-secondary"><span class="result-tag">CONTINUE</span><p class="result-title">Continue to Algorithm 2</p><p class="result-detail">No emergency features identified.</p><a href="#algo2" style="color:var(--accent); font-weight:600; font-size:13.5px;">Go to Algorithm 2 →</a></div><button class="step-restart" onclick="restart_${containerId}()">↺ Start over</button>`;
+      return;
+    }
+    const gate = algo.gates[gateId];
+    const examplesHtml = gate.ex.length ? `<ul class="step-examples">${gate.ex.map(e=>`<li>${e}</li>`).join('')}</ul>` : '';
+    container.innerHTML = `
+      <div class="step-card">
+        <p class="step-q">${gate.q}</p>
+        ${examplesHtml}
+        <div class="step-actions">
+          <button class="step-btn yes" onclick="answer_${containerId}('${gateId}', true)">YES</button>
+          <button class="step-btn no" onclick="answer_${containerId}('${gateId}', false)">NO</button>
+        </div>
+      </div>`;
+  }
+
+  function renderResult(result){
+    const linkHtml = result.link ? `<a href="${result.link}" style="color:var(--accent); font-weight:600; font-size:13.5px; display:inline-block; margin-top:10px;">${result.linkLabel}</a>` : '';
+    container.innerHTML = `
+      <div class="result-card ${result.style}">
+        <span class="result-tag">${result.tag}</span>
+        <p class="result-title">${result.title}</p>
+        <div class="result-detail">${result.detail}</div>
+        ${linkHtml}
+      </div>
+      <button class="step-restart" onclick="restart_${containerId}()">↺ Start over</button>`;
+  }
+
+  function renderSub(gateId, gate){
+    container.innerHTML = `
+      <div class="step-card">
+        <p class="step-q" style="color:var(--text-dim); font-weight:500; font-size:14px;">Action: <strong style="color:var(--text);">${gate.yes.action}</strong></p>
+        <div class="result-sub">
+          <p class="step-q">${gate.yes.subQ}</p>
+          <div class="step-actions">
+            <button class="step-btn no" onclick="subAnswer_${containerId}('${gateId}', true)">YES</button>
+            <button class="step-btn yes" onclick="subAnswer_${containerId}('${gateId}', false)">NO</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  window[`answer_${containerId}`] = function(gateId, isYes){
+    const gate = algo.gates[gateId];
+    trail.push({q: gate.q.length > 34 ? gate.q.slice(0,34)+'…' : gate.q, a: isYes ? 'yes':'no'});
+    renderTrail();
+    if(isYes){
+      if(gate.yes.type === 'terminal'){ renderResult(gate.yes); }
+      else if(gate.yes.type === 'sub'){ renderSub(gateId, gate); }
+    } else {
+      if(typeof gate.no === 'string'){ renderGate(gate.no); }
+      else { renderResult(gate.no); }
+    }
+  };
+
+  window[`subAnswer_${containerId}`] = function(gateId, etiologyFound){
+    const gate = algo.gates[gateId];
+    if(etiologyFound){ renderResult(gate.yes.subYes); }
+    else {
+      const next = gate.yes.subNo;
+      trail.push({q:'Etiology identified?', a:'no'});
+      renderTrail();
+      renderGate(next);
+    }
+  };
+
+  window[`restart_${containerId}`] = function(){
+    trail = [];
+    renderTrail();
+    renderGate(algo.start);
+  };
+
+  renderGate(algo.start);
+}
+makeStepper('stepper1','trail1',ALGO1);
+makeStepper('stepper2','trail2',ALGO2);
+
+/* ---------------- Full-algorithm static view ---------------- */
+function renderFullAlgo(containerId, algo, gateId, depth){
+  const gate = algo.gates[gateId];
+  if(!gate) return '';
+  const exHtml = gate.ex && gate.ex.length ? `<p class="fa-ex">${gate.ex.join(' · ')}</p>` : '';
+  let yesHtml = '';
+  if(gate.yes.type === 'terminal'){
+    yesHtml = `<div class="fa-branch"><span class="y">YES →</span><span>${gate.yes.title}</span></div>`;
+  } else if(gate.yes.type === 'sub'){
+    yesHtml = `<div class="fa-branch"><span class="y">YES →</span><span>${gate.yes.action} → "${gate.yes.subQ}" → YES: ${gate.yes.subYes.title} / NO: continue</span></div>`;
+  }
+  let noHtml = '';
+  if(typeof gate.no === 'string' && gate.no !== 'algo2'){
+    noHtml = `<div class="fa-branch"><span class="n">NO →</span><span>continue</span></div>`;
+  } else if(typeof gate.no === 'object'){
+    noHtml = `<div class="fa-branch"><span class="n">NO →</span><span>${gate.no.title}</span></div>`;
+  } else if(gate.no === 'algo2'){
+    noHtml = `<div class="fa-branch"><span class="n">NO →</span><span>Continue to Algorithm 2</span></div>`;
+  }
+  let html = `<div class="fa-node"><p class="fa-q">${gate.q}</p>${exHtml}${yesHtml}${noHtml}</div>`;
+  let nextId = (typeof gate.no === 'string' && gate.no !== 'algo2') ? gate.no : null;
+  let subNextId = (gate.yes.type === 'sub') ? gate.yes.subNo : null;
+  if(nextId){ html += `<div class="fa-indent">${renderFullAlgo(containerId, algo, nextId, depth+1)}</div>`; }
+  return html;
+}
+document.getElementById('fa1').innerHTML = renderFullAlgo('fa1', ALGO1, ALGO1.start, 0);
+document.getElementById('fa2').innerHTML = renderFullAlgo('fa2', ALGO2, ALGO2.start, 0);
+
+function toggleFull(id){
+  document.getElementById(id).classList.toggle('show');
+}
+
+/* ---------------- Interactive high-risk checklist removed in favor of Red Flags table (static) ---------------- */
+
+/* ---------------- ID Migraine tool ---------------- */
+const idmState = { light:false, activity:false, nausea:false };
+function toggleIdm(key){
+  idmState[key] = !idmState[key];
+  const el = document.getElementById('idm-'+key);
+  el.classList.toggle('on', idmState[key]);
+  el.querySelector('.idm-state').textContent = idmState[key] ? 'YES' : 'NO';
+  const count = Object.values(idmState).filter(Boolean).length;
+  const resultEl = document.getElementById('idmResult');
+  if(count >= 2){
+    resultEl.className = 'idm-result pos';
+    resultEl.textContent = `${count}/3 positive — Migraine screen POSITIVE (sensitivity 0.84, specificity 0.76).`;
+  } else {
+    resultEl.className = 'idm-result neg';
+    resultEl.textContent = `${count}/3 positive — Migraine screen negative.`;
+  }
+}
+
+/* ---------------- Secondary headache clue -> cause searchable table ---------------- */
+const CLUES = [
+  ['Thunderclap', 'SAH, RCVS, dissection, CVT, other vascular causes'],
+  ['Focal deficit', 'Stroke, hemorrhage, mass, CVT'],
+  ['Fever + meningismus', 'Meningitis/encephalitis'],
+  ['Papilledema', 'Raised ICP / IIH / mass'],
+  ['Postural', 'Intracranial hypotension / CSF leak'],
+  ['New daily persistent', 'Secondary causes must be considered'],
+  ['Age ≥50', 'GCA, neoplasm, other secondary causes'],
+  ['Pregnancy/postpartum', 'Preeclampsia, CVT, postdural puncture'],
+  ['Immunosuppression', 'Infection, inflammatory disease'],
+  ['Anticoagulation', 'Intracranial hemorrhage/subdural'],
+  ['Horner + neck pain', 'Cervical artery dissection'],
+  ['Recurrent thunderclap', 'RCVS'],
+  ['Unilateral visual loss', 'Optic neuropathy/optic neuritis'],
+  ['Morning headache', 'OSA and other secondary causes']
+];
+function renderClues(list){
+  const body = document.getElementById('clueBody');
+  const empty = document.getElementById('clueEmpty');
+  body.innerHTML = list.map(([clue,cause]) => `<tr><td><strong>${clue}</strong></td><td>${cause}</td></tr>`).join('');
+  empty.style.display = list.length ? 'none' : 'block';
+}
+function filterClues(){
+  const q = document.getElementById('clueSearch').value.trim().toLowerCase();
+  const filtered = CLUES.filter(([clue,cause]) => clue.toLowerCase().includes(q) || cause.toLowerCase().includes(q));
+  renderClues(filtered);
+}
+renderClues(CLUES);
+
+/* ---------------- TOC search-jump highlight ---------------- */
+document.querySelectorAll('.wb-toc a').forEach(a => {
+  a.addEventListener('click', () => {
+    const id = a.getAttribute('href').replace('#','');
+    const el = document.getElementById(id);
+    if(el && el.tagName.toLowerCase() === 'details'){ el.open = true; }
+  });
+});
+
+/* ---------------- Sticky mobile algorithm button ---------------- */
+const stickyBtn = document.getElementById('stickyAlgoBtn');
+const startHereEl = document.getElementById('start-here');
+window.addEventListener('scroll', () => {
+  const rect = startHereEl.getBoundingClientRect();
+  const past = rect.bottom < 0;
+  if(window.innerWidth <= 860 && past){ stickyBtn.classList.add('show'); }
+  else { stickyBtn.classList.remove('show'); }
+});
+</script>
+
+</body>
+</html>
