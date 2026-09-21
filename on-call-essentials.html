@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>On Call Essentials — NeuroBureau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- <link rel="stylesheet" href="style.css"> -->
+<!-- <script src="nav-data.js" defer></script> -->
+<!-- <script src="script.js" defer></script> -->
+<style>
+  :root{
+    --bg:#0f1216; --bg-panel:#161b21; --bg-card:#1b2129; --bg-card-hover:#1f2630;
+    --border:#2a323d; --border-light:#333d4a;
+    --text:#e7ebf0; --text-dim:#a6b0bd; --text-faint:#6b7684;
+    --accent:#4fd1c5; --accent-soft:rgba(79,209,197,0.12);
+    --danger:#e8747c; --danger-bg:rgba(232,116,124,0.11); --danger-strong:#c94a53;
+    --warn2:#e3a341; --warn2-bg:rgba(227,163,65,0.11);
+    --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.55;}
+  a{color:var(--accent);}
+
+  .site-topbar{display:flex; align-items:center; gap:14px; padding:14px 32px; border-bottom:1px solid var(--border); background:var(--bg-panel);}
+  .site-hamburger{background:none; border:1px solid var(--border-light); color:var(--text); border-radius:6px; font-size:16px; padding:5px 10px; cursor:pointer;}
+  .site-wordmark{font-family:var(--mono); letter-spacing:0.08em; font-size:14px; color:var(--text); text-decoration:none;}
+  .site-breadcrumb{padding:10px 32px 0; margin:0; font-size:13px;}
+  .site-breadcrumb a{color:var(--text-faint); text-decoration:none;}
+  .site-breadcrumb a:hover{color:var(--accent);}
+
+  .wrap{max-width:900px; margin:0 auto; padding:24px 32px 60px;}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin:0 0 6px;}
+  h1{font-size:32px; font-weight:700; margin:0 0 8px; letter-spacing:-0.01em;}
+  .subtitle{color:var(--text-dim); font-size:15px; max-width:640px; margin:0 0 28px;}
+
+  .protocol-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:640px){.protocol-grid{grid-template-columns:1fr;}}
+
+  .protocol-card{display:block; border-radius:10px; padding:18px 20px; border:1.5px solid var(--border-light); background:var(--bg-card); text-decoration:none; transition:transform .1s, background .15s;}
+  .protocol-card:hover{transform:translateY(-1px); background:var(--bg-card-hover);}
+  .protocol-card.stat{border-color:var(--danger-strong);}
+  .protocol-card.urgent{border-color:var(--warn2);}
+  .ptag{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; display:inline-block; padding:3px 8px; border-radius:4px; margin-bottom:10px;}
+  .stat .ptag{background:var(--danger-bg); color:var(--danger);}
+  .urgent .ptag{background:var(--warn2-bg); color:var(--warn2);}
+  .protocol-card:not(.stat):not(.urgent) .ptag{background:var(--bg-panel); color:var(--text-faint);}
+  .pname{font-size:17px; font-weight:700; color:var(--text); display:block; margin-bottom:6px;}
+  .pdesc{font-size:13px; color:var(--text-dim); margin:0;}
+
+  .wb-footer{padding:28px 0 0; border-top:1px solid var(--border); margin-top:28px; font-size:12.5px; color:var(--text-faint); line-height:1.6;}
+  .wb-footer a{color:var(--text-dim);}
+  .wb-footer a:hover{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<header class="site-topbar">
+  <button class="site-hamburger" aria-label="Menu">☰</button>
+  <a class="site-wordmark" href="index.html"><strong>NEUROBUREAU</strong></a>
+</header>
+<p class="site-breadcrumb"><a href="index.html">← NeuroBureau home</a></p>
+
+<div class="wrap">
+  <p class="eyebrow">⚡ On Call Essentials</p>
+  <h1>On Call Essentials</h1>
+  <p class="subtitle">The five things you reach for first when something is going wrong right now. STAT items are time-critical — don't wait to look them up once you're already in the room.</p>
+
+  <div class="protocol-grid">
+    <a class="protocol-card stat" href="protocols/status-epilepticus.html">
+      <span class="ptag">STAT</span>
+      <span class="pname">Status Epilepticus</span>
+      <p class="pdesc">Active seizure management, timed algorithm.</p>
+    </a>
+    <a class="protocol-card stat" href="protocols/acute-ischemic-stroke.html">
+      <span class="ptag">STAT</span>
+      <span class="pname">Code Stroke</span>
+      <p class="pdesc">Acute ischemic stroke — recognition through treatment.</p>
+    </a>
+    <a class="protocol-card stat" href="protocols/elevated-icp.html">
+      <span class="ptag">STAT</span>
+      <span class="pname">Elevated ICP / Herniation</span>
+      <p class="pdesc">Recognizing and managing raised intracranial pressure.</p>
+    </a>
+    <a class="protocol-card urgent" href="protocols/status-migrainosus.html">
+      <span class="ptag">Urgent</span>
+      <span class="pname">Status Migrainosus</span>
+      <p class="pdesc">Refractory migraine management.</p>
+    </a>
+    <a class="protocol-card" href="protocols/basic-medicine.html">
+      <span class="ptag">Reference</span>
+      <span class="pname">Basic Medicine for the On-Call Neurologist</span>
+      <p class="pdesc">Bread-and-butter medicine issues that come up on a neuro service.</p>
+    </a>
+  </div>
+
+  <div class="wb-footer">
+    <p>See <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for how to add to this page. <a href="index.html">← Back to NeuroBureau home</a></p>
+  </div>
+</div>
+
+</body>
+</html>
